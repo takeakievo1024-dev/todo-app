@@ -1,4 +1,9 @@
 <?php
+//new PDO()でDBにアクセスできる状態にする。
+$pdo = new PDO('mysql:host=localhost;dbname=todo_app;charset=utf8',
+'root',
+'',[PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION,
+PDO::ATTR_DEFAULT_FETCH_MODE=>PDO::FETCH_ASSOC]);
 
 //POSTの処理がおこなわれた時に動く
 if($_SERVER['REQUEST_METHOD'] === 'POST'){
@@ -8,22 +13,18 @@ if(isset($_POST["text"])){
 //値を代入
 $text = $_POST["text"];
 
-
 //空文字チェック
 if(trim($text) === ""){
-
 echo "入力してください";
-
 }else{
 try{
-//new PDO()でDBにアクセスできる状態にする。
-$pdo = new PDO('mysql:host=localhost;dbname=todo_app;charset=utf8',
-'root',
-'');
+
 //SQL文でDBに入力情報を書き込む。   
 $sql = "INSERT INTO tasks(title) VALUES(?)";
 $stmt = $pdo->prepare($sql);
 $stmt->execute([$text]);
+header("Location:index.php");
+exit;
 }catch(Exception $e){
     echo "DBに書き込みが失敗しました";
 }
@@ -32,10 +33,33 @@ $stmt->execute([$text]);
 }
 ?>
 
+
 <body>
+
+<div style="text-align:center;">
 <form method = "POST" action = "index.php">
     <input type = "text" name = "text">
     <input type = "submit" value = "送信"><br>
-
-
+</form>
 </body>
+
+<?php
+
+//一覧表示を作る
+//$sqlにtasksテーブルの中のカラムのtitleを指定。
+$sql = "SELECT title FROM tasks";
+//$stmtに$pdoのアクセス方法を使い$sqlを格納
+$stmt = $pdo->prepare($sql);
+//DBにアクセスする。
+$stmt->execute();
+//PHPで使える形に変換する
+$todos = $stmt->fetchAll();
+?>
+<body>
+<ul>
+<?php foreach($todos as $todo):?>
+<li><?=htmlspecialchars($todo['title'],ENT_QUOTES,'UTF-8')?></li>
+<?php endforeach;?>
+</ul>
+</body>
+
