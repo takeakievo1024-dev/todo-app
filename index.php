@@ -5,11 +5,25 @@ $pdo = new PDO('mysql:host=localhost;dbname=todo_app;charset=utf8',
 '',[PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION,
 PDO::ATTR_DEFAULT_FETCH_MODE=>PDO::FETCH_ASSOC]);
 
+
+
 //POSTの処理がおこなわれた時に動く
 if($_SERVER['REQUEST_METHOD'] === 'POST'){
 
+if(isset($_POST["delete_id"])){
+
+$id = $_POST["delete_id"];
+//sqlの削除文を書き込む
+$sql = "DELETE FROM tasks WHERE id = ?";
+$stmt = $pdo->prepare($sql);
+$stmt->execute([$id]);
+
+
+}
+
+
 //$_POSTに値が入っているか確認
-if(isset($_POST["text"])){
+elseif (isset($_POST["text"])){
 //値を代入
 $text = $_POST["text"];
 
@@ -47,7 +61,7 @@ exit;
 
 //一覧表示を作る
 //$sqlにtasksテーブルの中のカラムのtitleを指定。
-$sql = "SELECT title FROM tasks";
+$sql = "SELECT id,title FROM tasks";
 //$stmtに$pdoのアクセス方法を使い$sqlを格納
 $stmt = $pdo->prepare($sql);
 //DBにアクセスする。
@@ -57,8 +71,16 @@ $todos = $stmt->fetchAll();
 ?>
 <body>
 <ul>
+    
 <?php foreach($todos as $todo):?>
-<li><?=htmlspecialchars($todo['title'],ENT_QUOTES,'UTF-8')?></li>
+<li><?=htmlspecialchars($todo['title'],ENT_QUOTES,'UTF-8')?>
+<form method ="POST" action ="index.php" style = "display:inline;">
+    
+    <input type ="hidden" name = "delete_id" value = "<?= $todo['id'] ?>">
+    <input type = "submit" value = "削除">
+</form>
+</li>
+
 <?php endforeach;?>
 </ul>
 </body>
