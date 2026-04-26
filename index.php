@@ -10,20 +10,42 @@ PDO::ATTR_DEFAULT_FETCH_MODE=>PDO::FETCH_ASSOC]);
 //POSTの処理がおこなわれた時に動く
 if($_SERVER['REQUEST_METHOD'] === 'POST'){
 
-if(isset($_POST["delete_id"])){
+if(isset($_POST["update"])){
 
+$id = $_POST["select_id"];
+$title =$_POST["change_title"];
+if(trim($title) ===""){
+    echo "入力してください";
+}else{
+try{
+$sql = "UPDATE tasks SET title = ? WHERE id = ?";
+$stmt = $pdo->prepare($sql);
+$stmt->execute([$title,$id]);
+header("Location:index.php");
+exit;}
+catch(Exception $e){
+    echo "更新ができません";
+}
+}
+}
+
+
+elseif(isset($_POST["delete"])){
+try{
 $id = $_POST["delete_id"];
 //sqlの削除文を書き込む
 $sql = "DELETE FROM tasks WHERE id = ?";
 $stmt = $pdo->prepare($sql);
 $stmt->execute([$id]);
-
-
+header("Location:index.php");
+exit;}
+catch(Exception $e){
+    echo "削除ができません";
 }
 
-
-//$_POSTに値が入っているか確認
-elseif (isset($_POST["text"])){
+}
+    
+elseif (isset($_POST["insert"])){
 //値を代入
 $text = $_POST["text"];
 
@@ -45,6 +67,7 @@ exit;
 }
 }
 }
+
 ?>
 
 
@@ -53,9 +76,9 @@ exit;
 <div style="text-align:center;">
 <form method = "POST" action = "index.php">
     <input type = "text" name = "text">
-    <input type = "submit" value = "送信"><br>
+    <input type = "submit" name = "insert" value = "送信"><br>
 </form>
-</body>
+
 
 <?php
 
@@ -69,7 +92,7 @@ $stmt->execute();
 //PHPで使える形に変換する
 $todos = $stmt->fetchAll();
 ?>
-<body>
+
 <ul>
     
 <?php foreach($todos as $todo):?>
@@ -77,8 +100,14 @@ $todos = $stmt->fetchAll();
 <form method ="POST" action ="index.php" style = "display:inline;">
     
     <input type ="hidden" name = "delete_id" value = "<?= $todo['id'] ?>">
-    <input type = "submit" value = "削除">
+    <input type = "submit" name = "delete" value = "削除">
 </form>
+<form method ="POST" action ="index.php" style = "display:inline;">
+    <input type ="hidden" name = "select_id" value ="<?=$todo['id'] ?>">
+    <input type = "text" name = "change_title" value ="<?=$todo['title']?>" >
+    <input type ="submit" name = "update" value = "更新">
+</form>
+
 </li>
 
 <?php endforeach;?>
